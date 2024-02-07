@@ -1,10 +1,16 @@
 const mongoose = require('mongoose')
 const config = require('../utils/config.js')
 
-const blogSchema = mongoose.Schema({
-  title: String,
+const blogSchema = new mongoose.Schema({
+  title: {
+    type: String,
+    required: true
+  },
   author: String,
-  url: String,
+  url: {
+    type: String,
+    required: true
+  },
   likes: Number
 })
 
@@ -16,6 +22,6 @@ blogSchema.set('toJSON', {
   }
 })
 
-const Blog = mongoose.model('Blog', blogSchema)
+//const Blog = mongoose.model('Blog', blogSchema)
 
 module.exports = mongoose.model('Blog', blogSchema)

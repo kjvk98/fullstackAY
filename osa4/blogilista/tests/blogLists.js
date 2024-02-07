@@ -62,7 +62,27 @@ const blogs = [
     }  
   ]
 
+
+
+const Blog = require('../models/blog')
+
+/*
+const nonExistingId = async () => {
+  const blog = new Blog({ title: 'willremovethissoon', url: 'justforinvalidID.com' })
+  await blog.save()
+  await Blog.deleteOne(blog)
+
+  return blog._id.toString()
+}
+*/
+const blogsInDb = async () => {
+  const blogs = await Blog.find({})
+  return blogs.map(blog => blog.toJSON())
+}
+
+
   module.exports = {
     listWithOneBlog,
-    blogs
+    blogs,
+    blogsInDb
   }

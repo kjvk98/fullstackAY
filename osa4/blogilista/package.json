@@ -4,16 +4,17 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-      "start": "cross-env NODE_ENV=production node index.js",
-      "dev": "cross-env NODE_ENV=development nodemon index.js",
-      "test": "cross-env NODE_ENV=test jest --verbose --runInBand"
-    },
+    "start": "cross-env NODE_ENV=production node index.js",
+    "dev": "cross-env NODE_ENV=development nodemon index.js",
+    "test": "cross-env NODE_ENV=test jest --verbose --runInBand"
+  },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^16.4.1",
     "express": "^4.18.2",
+    "express-async-errors": "^3.1.1",
     "mongoose": "^7.6.5"
   },
   "devDependencies": {
