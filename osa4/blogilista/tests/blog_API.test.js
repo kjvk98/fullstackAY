@@ -2,15 +2,18 @@ const mongoose = require('mongoose')
 const supertest = require('supertest')
 const app = require('../app')
 const lists = require('./blogLists.js')
+const bcrypt = require('bcrypt')
 
 const api = supertest(app)
 
 const Blog = require('../models/blog')
+const User = require('../models/user')
 
 
 beforeEach(async () => {
     await Blog.deleteMany({})
     await Blog.insertMany(lists.blogs)
+
   })
 
 describe('when there is initially blogs saved', () => {
@@ -44,6 +47,15 @@ describe('when there is initially blogs saved', () => {
     })
 })
 describe('addition of a new blog', () => {
+  beforeEach(async () => {
+    await User.deleteMany({})
+
+    const passwordHash = await bcrypt.hash('sekret', 10)
+    const user = new User({ username: 'root', passwordHash })
+
+    await user.save()
+  })
+
     test('a valid blog can be added ', async () => {
         const newBlog = {
             title: "New blog",
@@ -51,10 +63,18 @@ describe('addition of a new blog', () => {
             url: "https://KKBlog.com/",
             likes: 5
         }
-  
+
+        const user = {
+          username: 'root', 
+          password: 'sekret'
+        }
+        const res = await api.post('/api/login')
+        .send(user)
+        const token ='Bearer ' + res.body.token
         await api
         .post('/api/blogs')
         .send(newBlog)
+        .set({ 'Authorization': token})
         .expect(201)
         .expect('Content-Type', /application\/json/)
   
@@ -67,6 +87,20 @@ describe('addition of a new blog', () => {
           'New blog'
         )
   })
+  test('valid blog cannot be added with wrong authorization', async() => {
+    const newBlog = {
+      title: "newnewblog",
+      author: "KK",
+      url: "https://Blog.com/",
+      likes: 5
+    }
+    await api
+    .post('/api/blogs')
+    .send(newBlog)
+    .set({ 'Authorization': 'srh'})
+    .expect(401)
+
+  })
 
   test('a blog without likes have 0 likes', async () => {
     const newBlog = {
@@ -74,10 +108,17 @@ describe('addition of a new blog', () => {
             author: "KK",
             url: "https://KKBlog.com/"
     }
-  
+    const user = {
+      username: 'root', 
+      password: 'sekret'
+    }
+    const res = await api.post('/api/login')
+    .send(user)
+    const token ='Bearer ' + res.body.token
     await api
       .post('/api/blogs')
       .send(newBlog)
+      .set({ 'Authorization': token})
       .expect(201)
       .expect('Content-Type', /application\/json/)
   
@@ -98,14 +139,24 @@ describe('addition of a new blog', () => {
         url: "newnewblog.com"
     }
   
+    const user = {
+      username: 'root', 
+      password: 'sekret'
+    }
+    const res = await api.post('/api/login')
+    .send(user)
+    const token ='Bearer ' + res.body.token
+
     await api
       .post('/api/blogs')
       .send(newBlog)
+      .set({ 'Authorization': token})
       .expect(400)
   
     await api 
         .post('/api/blogs')
-        .send(newBlog)
+        .send(newnewBlog)
+        .set({ 'Authorization': token})
         .expect(400)
 
     const response = await api.get('/api/blogs')
@@ -114,30 +165,57 @@ describe('addition of a new blog', () => {
 })
 
 describe('deleting blogs', () => {
-  test('deleting succeeds with status code 204 if id is valid', async () => {
-    const response = await api.get('/api/blogs')
-    const blogsAtStart = response.body
-    const blogToDelete = blogsAtStart[0]
+  test('deleting succeeds with status code 204 if id is valid and correct auth', async () => {
 
+    const newBlog = {
+      title: "New blog",
+      author: "KK",
+      url: "https://KKBlog.com/",
+      likes: 5
+  }
+
+  const user = {
+    username: 'root', 
+    password: 'sekret'
+  }
+  const res = await api.post('/api/login')
+  .send(user)
+  const token ='Bearer ' + res.body.token
+  const blog = await api
+  .post('/api/blogs')
+  .send(newBlog)
+  .set({ 'Authorization': token})
+
+  const id = blog.body.id
     await api
-      .delete(`/api/blogs/${blogToDelete.id}`)
+      .delete(`/api/blogs/${id}`)
+      .set({'Authorization': token})
       .expect(204)
 
     const blogsAtEnd = await lists.blogsInDb()
 
     expect(blogsAtEnd).toHaveLength(
-      lists.blogs.length - 1
+      lists.blogs.length
     )
 
     const title = blogsAtEnd.map(r => r.title)
 
-    expect(title).not.toContain(blogToDelete.title)
+    expect(title).not.toContain(newBlog.title)
   })
 
   test('deleting fails if invalid id', async() => {
     const invalidId = '123'
+    const user = {
+      username: 'root', 
+      password: 'sekret'
+    }
+    const res = await api.post('/api/login')
+    .send(user)
+    const token ='Bearer ' + res.body.token
+
     await api
         .delete(`/api/blogs/${invalidId}`)
+        .set({'Authorization': token})
         .expect(400)
     
     const blogsAtEnd = await lists.blogsInDb()
@@ -145,6 +223,20 @@ describe('deleting blogs', () => {
         lists.blogs.length
     )
   })
+
+  test('deleting fails with wrong auth', async() => {
+    const blogsAtStart = await lists.blogsInDb()
+    const blogToDelete = blogsAtStart[0]
+    await api
+    .delete(`/api/blogs/${blogToDelete.id}`)
+    .expect(401)
+
+    const blogsAtEnd = await lists.blogsInDb()
+    expect(blogsAtEnd).toHaveLength(
+        lists.blogs.length
+    )
+  })
+
 })
 
 describe('updating likes', () => {
