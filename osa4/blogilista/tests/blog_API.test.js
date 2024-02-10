@@ -70,7 +70,7 @@ describe('addition of a new blog', () => {
         }
         const res = await api.post('/api/login')
         .send(user)
-        const token ='Bearer ' + res.body.token
+        const token =`Bearer ${res.body.token}`
         await api
         .post('/api/blogs')
         .send(newBlog)
@@ -114,7 +114,7 @@ describe('addition of a new blog', () => {
     }
     const res = await api.post('/api/login')
     .send(user)
-    const token ='Bearer ' + res.body.token
+    const token =`Bearer ${res.body.token}`
     await api
       .post('/api/blogs')
       .send(newBlog)
@@ -145,7 +145,7 @@ describe('addition of a new blog', () => {
     }
     const res = await api.post('/api/login')
     .send(user)
-    const token ='Bearer ' + res.body.token
+    const token =`Bearer ${res.body.token}`
 
     await api
       .post('/api/blogs')
@@ -180,7 +180,7 @@ describe('deleting blogs', () => {
   }
   const res = await api.post('/api/login')
   .send(user)
-  const token ='Bearer ' + res.body.token
+  const token =`Bearer ${res.body.token}`
   const blog = await api
   .post('/api/blogs')
   .send(newBlog)
